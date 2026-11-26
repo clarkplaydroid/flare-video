@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body, html { height: 100%; background: #000; overflow: hidden; }
+    .feed { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; }
+    .feed::-webkit-scrollbar { display: none; }
+    .slide { height: 100vh; width: 100vw; scroll-snap-align: start; position: relative; }
+    video { width: 100%; height: 100%; object-fit: cover; }
+  </style>
+</head>
+<body>
+  <div class="feed" id="feed"></div>
+  <script>
+    // Read comma-separated video URLs passed from Adalo's Web View URL
+    const params = new URLSearchParams(window.location.search);
+    const rawList = params.get('v') || '';
+    const videoUrls = rawList.split(',').map(u => decodeURIComponent(u.trim())).filter(Boolean);
+
+    const feed = document.getElementById('feed');
+    videoUrls.forEach(url => {
+      const slide = document.createElement('div');
+      slide.className = 'slide';
+      slide.innerHTML = `<video src="${url}" playsinline loop muted autoplay></video>`;
+      const vid = slide.querySelector('video');
+      slide.addEventListener('click', () => { vid.muted = !vid.muted; });
+      feed.appendChild(slide);
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const video = entry.target;
+        if (entry.isIntersecting) { video.play(); }
+        else { video.pause(); video.currentTime = 0; }
+      });
+    }, { threshold: 0.75 });
+
+    document.querySelectorAll('video').forEach(v => observer.observe(v));
+  </script>
+</body>
+</html>
